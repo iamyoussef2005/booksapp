@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/providers/app_settings_provider.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/account_providers.dart';
 import 'order_history_page.dart';
@@ -16,9 +17,34 @@ class AccountPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
-    final settings = ref.watch(appSettingsProvider).valueOrNull ??
-        const AppSettings();
-    final auth = ref.watch(authProvider).valueOrNull ?? const AuthState();
+    final settingsAsync = ref.watch(appSettingsProvider);
+    final authAsync = ref.watch(authProvider);
+
+    if ((settingsAsync.isLoading && !settingsAsync.hasValue) ||
+        (authAsync.isLoading && !authAsync.hasValue)) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Profile & Settings')),
+        body: const AppLoadingView(message: 'Loading your account...'),
+      );
+    }
+
+    if ((settingsAsync.hasError && !settingsAsync.hasValue) ||
+        (authAsync.hasError && !authAsync.hasValue)) {
+      return Scaffold(
+        appBar: AppBar(title: const Text('Profile & Settings')),
+        body: AppErrorState(
+          title: 'We could not load your account',
+          message: 'Please try again and we will refresh your profile details.',
+          onRetry: () {
+            ref.invalidate(appSettingsProvider);
+            ref.invalidate(authProvider);
+          },
+        ),
+      );
+    }
+
+    final settings = settingsAsync.valueOrNull ?? const AppSettings();
+    final auth = authAsync.valueOrNull ?? const AuthState();
     final user = auth.user;
     final orders = ref.watch(orderHistoryProvider);
     final wishlist = ref.watch(wishlistProvider);

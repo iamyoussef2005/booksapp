@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hugeicons/hugeicons.dart';
 
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/app_icon.dart';
+import '../../../account/presentation/providers/account_providers.dart';
 import '../../data/models/book_model.dart';
 import 'book_cover_image.dart';
 
-class BookGridCard extends StatelessWidget {
+class BookGridCard extends ConsumerWidget {
   const BookGridCard({
     super.key,
     required this.book,
@@ -18,8 +20,9 @@ class BookGridCard extends StatelessWidget {
   final VoidCallback? onTap;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final isWishlisted = ref.watch(isInWishlistProvider(book.id));
 
     return Material(
       color: AppColors.surface,
@@ -40,6 +43,34 @@ class BookGridCard extends StatelessWidget {
                         imageUrl: book.imageUrl,
                         borderRadius: AppSpacing.radiusMd,
                         heroTag: 'book-${book.id}',
+                      ),
+                    ),
+                    Positioned(
+                      top: AppSpacing.xs,
+                      left: AppSpacing.xs,
+                      child: IconButton.filledTonal(
+                        onPressed: () {
+                          ref
+                              .read(wishlistIdsProvider.notifier)
+                              .toggle(book.id);
+                        },
+                        style: IconButton.styleFrom(
+                          backgroundColor: AppColors.surface.withValues(
+                            alpha: 0.92,
+                          ),
+                          foregroundColor: isWishlisted
+                              ? AppColors.accent
+                              : AppColors.primaryDark,
+                        ),
+                        icon: AppIcon(
+                          isWishlisted
+                              ? HugeIcons.strokeRoundedFavourite
+                              : HugeIcons.strokeRoundedFavourite,
+                          size: 18,
+                          color: isWishlisted
+                              ? AppColors.accent
+                              : AppColors.primaryDark,
+                        ),
                       ),
                     ),
                     Positioned(

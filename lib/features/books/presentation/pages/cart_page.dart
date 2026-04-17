@@ -5,6 +5,7 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/app_icon.dart';
+import '../../../../core/widgets/app_state_view.dart';
 import '../../../checkout/presentation/pages/checkout_page.dart';
 import '../providers/cart_providers.dart';
 import '../widgets/book_cover_image.dart';
@@ -25,40 +26,14 @@ class CartPage extends ConsumerWidget {
         title: const Text('My Cart'),
       ),
       body: cartItems.isEmpty
-          ? Center(
-              child: Padding(
-                padding: AppSpacing.screenPadding,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Container(
-                      width: 92,
-                      height: 92,
-                      decoration: const BoxDecoration(
-                        color: AppColors.surfaceSoft,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const AppIcon(
-                        HugeIcons.strokeRoundedShoppingBag02,
-                        size: 42,
-                        color: AppColors.primary,
-                      ),
-                    ),
-                    AppSpacing.gapLg,
-                    Text(
-                      'Your cart is feeling a little empty.',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.headlineMedium,
-                    ),
-                    AppSpacing.gapSm,
-                    Text(
-                      'Add a few beautiful reads and they will show up here.',
-                      textAlign: TextAlign.center,
-                      style: theme.textTheme.bodyLarge,
-                    ),
-                  ],
-                ),
+          ? const AppEmptyState(
+              icon: AppIcon(
+                HugeIcons.strokeRoundedShoppingBag02,
+                size: 44,
+                color: AppColors.primary,
               ),
+              title: 'Your cart is feeling a little empty.',
+              message: 'Add a few beautiful reads and they will show up here.',
             )
           : ListView(
               padding: AppSpacing.screenPadding,
@@ -237,8 +212,8 @@ class _QuantityButton extends StatelessWidget {
     return SizedBox(
       width: 34,
       height: 34,
-        child: OutlinedButton(
-          onPressed: onPressed,
+      child: OutlinedButton(
+        onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           padding: EdgeInsets.zero,
           side: const BorderSide(color: AppColors.border),

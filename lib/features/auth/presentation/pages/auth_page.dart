@@ -311,25 +311,6 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                             ],
                           ),
                         ),
-                        AppSpacing.gapLg,
-                        Wrap(
-                          spacing: AppSpacing.sm,
-                          runSpacing: AppSpacing.sm,
-                          children: const [
-                            _FeaturePill(
-                              icon: HugeIcons.strokeRoundedBookSearch,
-                              label: 'Smart search',
-                            ),
-                            _FeaturePill(
-                              icon: HugeIcons.strokeRoundedShoppingCart01,
-                              label: 'Cart and checkout',
-                            ),
-                            _FeaturePill(
-                              icon: HugeIcons.strokeRoundedAccountSetting01,
-                              label: 'Profile settings',
-                            ),
-                          ],
-                        ),
                       ],
                     ),
                   ),
@@ -559,45 +540,6 @@ class _ModeChip extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _FeaturePill extends StatelessWidget {
-  const _FeaturePill({
-    required this.icon,
-    required this.label,
-  });
-
-  final List<List<dynamic>> icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.sm,
-        vertical: AppSpacing.sm,
-      ),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.65),
-        borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          AppIcon(icon, size: 16, color: AppColors.primaryDark),
-          AppSpacing.gapWxs,
-          Text(
-            label,
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: AppColors.textPrimary,
-            ),
-          ),
-        ],
       ),
     );
   }

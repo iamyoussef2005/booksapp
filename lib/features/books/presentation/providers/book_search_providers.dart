@@ -7,11 +7,20 @@ import 'books_home_providers.dart';
 
 const allCategoryFilter = 'All';
 
+enum BookSortOption {
+  relevance,
+  popularity,
+  newest,
+  rating,
+  priceLowToHigh,
+}
+
 class BookSearchState {
   const BookSearchState({
     this.query = '',
     this.selectedCategory = allCategoryFilter,
     this.minimumRating = 0,
+    this.sortOption = BookSortOption.relevance,
     this.results = const [],
     this.suggestions = const [],
     this.isSearching = false,
@@ -20,6 +29,7 @@ class BookSearchState {
   final String query;
   final String selectedCategory;
   final double minimumRating;
+  final BookSortOption sortOption;
   final List<BookModel> results;
   final List<String> suggestions;
   final bool isSearching;
@@ -28,6 +38,7 @@ class BookSearchState {
     String? query,
     String? selectedCategory,
     double? minimumRating,
+    BookSortOption? sortOption,
     List<BookModel>? results,
     List<String>? suggestions,
     bool? isSearching,
@@ -36,6 +47,7 @@ class BookSearchState {
       query: query ?? this.query,
       selectedCategory: selectedCategory ?? this.selectedCategory,
       minimumRating: minimumRating ?? this.minimumRating,
+      sortOption: sortOption ?? this.sortOption,
       results: results ?? this.results,
       suggestions: suggestions ?? this.suggestions,
       isSearching: isSearching ?? this.isSearching,
@@ -86,6 +98,12 @@ class BookSearchNotifier extends AutoDisposeNotifier<BookSearchState> {
     _applySearch();
   }
 
+  void updateSortOption(BookSortOption sortOption) {
+    state = state.copyWith(sortOption: sortOption, isSearching: true);
+    _debounce?.cancel();
+    _debounce = Timer(const Duration(milliseconds: 100), _applySearch);
+  }
+
   void clear() {
     _debounce?.cancel();
     final books = ref.read(booksProvider);
@@ -95,6 +113,10 @@ class BookSearchNotifier extends AutoDisposeNotifier<BookSearchState> {
     );
   }
 
+  void clearAllFilters() {
+    clear();
+  }
+
   void _applySearch() {
     final books = ref.read(booksProvider);
     final results = _filterBooks(
@@ -102,6 +124,7 @@ class BookSearchNotifier extends AutoDisposeNotifier<BookSearchState> {
       query: state.query,
       category: state.selectedCategory,
       minimumRating: state.minimumRating,
+      sortOption: state.sortOption,
     );
 
     state = state.copyWith(
@@ -116,32 +139,79 @@ class BookSearchNotifier extends AutoDisposeNotifier<BookSearchState> {
     required String query,
     required String category,
     required double minimumRating,
+    required BookSortOption sortOption,
   }) {
     final normalizedQuery = query.trim().toLowerCase();
     final filtered = books.where((book) {
       final matchesCategory =
           category == allCategoryFilter || book.category == category;
       final matchesRating = book.rating >= minimumRating;
-      final matchesQuery = normalizedQuery.isEmpty || _matchesQuery(book, normalizedQuery);
+      final matchesQuery =
+          normalizedQuery.isEmpty || _matchesQuery(book, normalizedQuery);
 
       return matchesCategory && matchesRating && matchesQuery;
     }).toList();
 
-    filtered.sort((a, b) {
-      final scoreDifference = _matchScore(b, normalizedQuery) - _matchScore(a, normalizedQuery);
-      if (scoreDifference != 0) {
-        return scoreDifference;
-      }
-
-      final ratingDifference = b.rating.compareTo(a.rating);
-      if (ratingDifference != 0) {
-        return ratingDifference;
-      }
-
-      return a.title.compareTo(b.title);
-    });
+    _sortBooks(
+      filtered,
+      normalizedQuery: normalizedQuery,
+      sortOption: sortOption,
+    );
 
     return filtered;
+  }
+
+  void _sortBooks(
+    List<BookModel> books, {
+    required String normalizedQuery,
+    required BookSortOption sortOption,
+  }) {
+    books.sort((a, b) {
+      switch (sortOption) {
+        case BookSortOption.priceLowToHigh:
+          final byPrice = a.price.compareTo(b.price);
+          if (byPrice != 0) {
+            return byPrice;
+          }
+          return b.rating.compareTo(a.rating);
+        case BookSortOption.rating:
+          final byRating = b.rating.compareTo(a.rating);
+          if (byRating != 0) {
+            return byRating;
+          }
+          return a.title.compareTo(b.title);
+        case BookSortOption.newest:
+          final byNewest = _bookOrder(b).compareTo(_bookOrder(a));
+          if (byNewest != 0) {
+            return byNewest;
+          }
+          return a.title.compareTo(b.title);
+        case BookSortOption.popularity:
+          final byFeatured = (b.isFeatured ? 1 : 0).compareTo(
+            a.isFeatured ? 1 : 0,
+          );
+          if (byFeatured != 0) {
+            return byFeatured;
+          }
+          final byPopularityScore =
+              _popularityScore(b).compareTo(_popularityScore(a));
+          if (byPopularityScore != 0) {
+            return byPopularityScore;
+          }
+          return a.title.compareTo(b.title);
+        case BookSortOption.relevance:
+          final scoreDifference =
+              _matchScore(b, normalizedQuery) - _matchScore(a, normalizedQuery);
+          if (scoreDifference != 0) {
+            return scoreDifference;
+          }
+          final ratingDifference = b.rating.compareTo(a.rating);
+          if (ratingDifference != 0) {
+            return ratingDifference;
+          }
+          return a.title.compareTo(b.title);
+      }
+    });
   }
 
   bool _matchesQuery(BookModel book, String query) {
@@ -192,6 +262,16 @@ class BookSearchNotifier extends AutoDisposeNotifier<BookSearchState> {
     }
 
     return score;
+  }
+
+  int _bookOrder(BookModel book) {
+    return int.tryParse(book.id) ?? 0;
+  }
+
+  int _popularityScore(BookModel book) {
+    final featuredBoost = book.isFeatured ? 100 : 0;
+    final ratingBoost = (book.rating * 10).round();
+    return featuredBoost + ratingBoost + book.stock;
   }
 
   List<String> _buildSuggestions(List<BookModel> books, String query) {

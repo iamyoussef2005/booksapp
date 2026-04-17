@@ -5,6 +5,7 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../core/widgets/app_icon.dart';
+import '../../../account/presentation/providers/account_providers.dart';
 import '../../data/models/book_model.dart';
 import '../providers/cart_providers.dart';
 import '../widgets/book_cover_image.dart';
@@ -80,6 +81,7 @@ class _BookDetailsPageState extends ConsumerState<BookDetailsPage>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final book = widget.book;
+    final isWishlisted = ref.watch(isInWishlistProvider(book.id));
 
     return Scaffold(
       body: CustomScrollView(
@@ -95,8 +97,13 @@ class _BookDetailsPageState extends ConsumerState<BookDetailsPage>
             ),
             actions: [
               IconButton(
-                onPressed: () {},
-                icon: const AppIcon(HugeIcons.strokeRoundedFavourite),
+                onPressed: () {
+                  ref.read(wishlistIdsProvider.notifier).toggle(book.id);
+                },
+                icon: AppIcon(
+                  HugeIcons.strokeRoundedFavourite,
+                  color: isWishlisted ? AppColors.accent : null,
+                ),
               ),
               IconButton(
                 onPressed: () {},
@@ -338,19 +345,54 @@ class _BookDetailsPageState extends ConsumerState<BookDetailsPage>
         ),
         child: ScaleTransition(
           scale: _buttonScale,
-          child: ElevatedButton.icon(
-            onPressed: book.stock > 0
-                ? () {
-                    ref.read(cartProvider.notifier).addItem(book);
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    ref.read(wishlistIdsProvider.notifier).toggle(book.id);
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text('${book.title} added to cart'),
+                        content: Text(
+                          isWishlisted
+                              ? '${book.title} removed from wishlist'
+                              : '${book.title} saved to wishlist',
+                        ),
                       ),
                     );
-                  }
-                : null,
-            icon: const AppIcon(HugeIcons.strokeRoundedShoppingBagAdd),
-            label: const Text('Add to Cart'),
+                  },
+                  icon: AppIcon(
+                    HugeIcons.strokeRoundedFavourite,
+                    color: isWishlisted ? AppColors.accent : AppColors.primary,
+                  ),
+                  label: Text(
+                    isWishlisted
+                        ? 'Remove from Wishlist'
+                        : 'Save to Wishlist',
+                  ),
+                ),
+              ),
+              AppSpacing.gapSm,
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  onPressed: book.stock > 0
+                      ? () {
+                          ref.read(cartProvider.notifier).addItem(book);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('${book.title} added to cart'),
+                            ),
+                          );
+                        }
+                      : null,
+                  icon: const AppIcon(HugeIcons.strokeRoundedShoppingBagAdd),
+                  label: const Text('Add to Cart'),
+                ),
+              ),
+            ],
           ),
         ),
       ),

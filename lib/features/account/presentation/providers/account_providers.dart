@@ -56,9 +56,42 @@ class PaymentMethod {
   final bool isDefault;
 }
 
+final _defaultWishlistIdsProvider = Provider<Set<String>>((ref) {
+  final books = ref.watch(booksProvider);
+  return books
+      .where((book) => book.rating >= 4.7)
+      .take(4)
+      .map((book) => book.id)
+      .toSet();
+});
+
+class WishlistNotifier extends Notifier<Set<String>> {
+  @override
+  Set<String> build() => {...ref.watch(_defaultWishlistIdsProvider)};
+
+  void toggle(String bookId) {
+    if (state.contains(bookId)) {
+      state = {...state}..remove(bookId);
+      return;
+    }
+
+    state = {...state, bookId};
+  }
+}
+
+final wishlistIdsProvider = NotifierProvider<WishlistNotifier, Set<String>>(
+  WishlistNotifier.new,
+);
+
 final wishlistProvider = Provider<List<BookModel>>((ref) {
   final books = ref.watch(booksProvider);
-  return books.where((book) => book.rating >= 4.7).take(4).toList();
+  final wishlistIds = ref.watch(wishlistIdsProvider);
+
+  return books.where((book) => wishlistIds.contains(book.id)).toList();
+});
+
+final isInWishlistProvider = Provider.family<bool, String>((ref, bookId) {
+  return ref.watch(wishlistIdsProvider).contains(bookId);
 });
 
 final savedAddressesProvider = Provider<List<SavedAddress>>((ref) {
