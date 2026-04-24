@@ -94,7 +94,7 @@ This Flutter project includes platform folders for:
 
 ## Assets
 
-Book cover images are stored in the `assets/` directory and declared in `pubspec.yaml`.
+Screenshots are stored in the `assets/` directory and declared in `pubspec.yaml`.
 
 ## Notes
 
