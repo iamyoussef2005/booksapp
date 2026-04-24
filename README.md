@@ -94,8 +94,7 @@ This Flutter project includes platform folders for:
 
 ## Assets
 
-Screenshots are stored in the `assets/` directory and declared in `pubspec.yaml`.
-
+Screenshots are stored in the `assets/` directory.
 ## Notes
 
 - This project is a UI-rich bookstore prototype, not a production-connected commerce app
