@@ -67,9 +67,9 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     ref.listen(authProvider, (previous, next) {
       final message = next.valueOrNull?.errorMessage;
       if (message != null && message.isNotEmpty) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(message)));
         ref.read(authProvider.notifier).clearError();
       }
     });
@@ -78,11 +78,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       body: DecoratedBox(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [
-              Color(0xFFF8F0E6),
-              Color(0xFFE9D7C5),
-              Color(0xFFD8B394),
-            ],
+            colors: [Color(0xFFF8F0E6), Color(0xFFE9D7C5), Color(0xFFD8B394)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
@@ -275,7 +271,9 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                               SizedBox(
                                 width: double.infinity,
                                 child: ElevatedButton(
-                                  onPressed: authState.isLoading ? null : _submit,
+                                  onPressed: authState.isLoading
+                                      ? null
+                                      : _submit,
                                   child: authState.isLoading
                                       ? const SizedBox(
                                           width: 18,
@@ -497,9 +495,9 @@ class _LabelText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       label,
-      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: AppColors.textPrimary,
-          ),
+      style: Theme.of(
+        context,
+      ).textTheme.titleMedium?.copyWith(color: AppColors.textPrimary),
     );
   }
 }
@@ -546,10 +544,7 @@ class _ModeChip extends StatelessWidget {
 }
 
 class _GlowOrb extends StatelessWidget {
-  const _GlowOrb({
-    required this.size,
-    required this.color,
-  });
+  const _GlowOrb({required this.size, required this.color});
 
   final double size;
   final Color color;
@@ -559,10 +554,7 @@ class _GlowOrb extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-      ),
+      decoration: BoxDecoration(shape: BoxShape.circle, color: color),
     );
   }
 }
