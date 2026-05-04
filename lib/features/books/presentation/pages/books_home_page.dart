@@ -17,11 +17,7 @@ import '../widgets/featured_books_carousel.dart';
 import 'book_details_page.dart';
 
 class BooksHomePage extends ConsumerStatefulWidget {
-  const BooksHomePage({
-    super.key,
-    this.onOpenCart,
-    this.onOpenAccount,
-  });
+  const BooksHomePage({super.key, this.onOpenCart, this.onOpenAccount});
 
   final VoidCallback? onOpenCart;
   final VoidCallback? onOpenAccount;
@@ -64,6 +60,112 @@ class _BooksHomePageState extends ConsumerState<BooksHomePage> {
     ref.read(bookSearchProvider.notifier).clearAllFilters();
   }
 
+  Widget _buildCollectionControls({
+    required BuildContext context,
+    required ThemeData theme,
+    required BookSearchState searchState,
+    required int bookCount,
+  }) {
+    return Wrap(
+      spacing: AppSpacing.sm,
+      runSpacing: AppSpacing.xs,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        PopupMenuButton<BookSortOption>(
+          tooltip: 'Sort books',
+          onSelected: (sortOption) {
+            ref.read(bookSearchProvider.notifier).updateSortOption(sortOption);
+          },
+          itemBuilder: (context) => const [
+            PopupMenuItem(
+              value: BookSortOption.relevance,
+              child: Text('Relevance'),
+            ),
+            PopupMenuItem(
+              value: BookSortOption.popularity,
+              child: Text('Popularity'),
+            ),
+            PopupMenuItem(value: BookSortOption.newest, child: Text('Newest')),
+            PopupMenuItem(value: BookSortOption.rating, child: Text('Rating')),
+            PopupMenuItem(
+              value: BookSortOption.priceLowToHigh,
+              child: Text('Price'),
+            ),
+          ],
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.swap_vert_rounded,
+                  size: 16,
+                  color: AppColors.primaryDark,
+                ),
+                AppSpacing.gapWxs,
+                Text(
+                  _sortLabel(searchState.sortOption),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        PopupMenuButton<double>(
+          tooltip: 'Minimum rating',
+          onSelected: (rating) {
+            ref.read(bookSearchProvider.notifier).updateMinimumRating(rating);
+          },
+          itemBuilder: (context) => const [
+            PopupMenuItem(value: 0, child: Text('All ratings')),
+            PopupMenuItem(value: 4, child: Text('4.0+')),
+            PopupMenuItem(value: 4.5, child: Text('4.5+')),
+            PopupMenuItem(value: 4.8, child: Text('4.8+')),
+          ],
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              borderRadius: BorderRadius.circular(AppSpacing.radiusXl),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const AppIcon(
+                  HugeIcons.strokeRoundedStarHalf,
+                  size: 16,
+                  color: AppColors.warning,
+                ),
+                AppSpacing.gapWxs,
+                Text(
+                  searchState.minimumRating == 0
+                      ? 'All ratings'
+                      : '${searchState.minimumRating.toStringAsFixed(1)}+',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        Text('$bookCount books', style: theme.textTheme.bodyMedium),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -80,10 +182,7 @@ class _BooksHomePageState extends ConsumerState<BooksHomePage> {
         actions: [
           IconButton(
             onPressed: widget.onOpenAccount,
-            icon: AppUserAvatar(
-              fullName: user?.fullName,
-              email: user?.email,
-            ),
+            icon: AppUserAvatar(fullName: user?.fullName, email: user?.email),
           ),
           IconButton(
             onPressed: widget.onOpenCart,
@@ -195,20 +294,18 @@ class _BooksHomePageState extends ConsumerState<BooksHomePage> {
                           runSpacing: AppSpacing.sm,
                           children: [
                             if (searchState.query.isNotEmpty)
-                              Chip(
-                                label: Text('Search: ${searchState.query}'),
-                              ),
-                            if (searchState.selectedCategory != allCategoryFilter)
-                              Chip(
-                                label: Text(searchState.selectedCategory),
-                              ),
+                              Chip(label: Text('Search: ${searchState.query}')),
+                            if (searchState.selectedCategory !=
+                                allCategoryFilter)
+                              Chip(label: Text(searchState.selectedCategory)),
                             if (searchState.minimumRating > 0)
                               Chip(
                                 label: Text(
                                   'Rating ${searchState.minimumRating.toStringAsFixed(1)}+',
                                 ),
                               ),
-                            if (searchState.sortOption != BookSortOption.relevance)
+                            if (searchState.sortOption !=
+                                BookSortOption.relevance)
                               Chip(
                                 label: Text(
                                   'Sort: ${_sortLabel(searchState.sortOption)}',
@@ -251,127 +348,51 @@ class _BooksHomePageState extends ConsumerState<BooksHomePage> {
                 ),
                 AppSpacing.gapXl,
 
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Browse Collection',
-                        style: theme.textTheme.headlineMedium,
-                      ),
-                    ),
-                    Row(
+                LayoutBuilder(
+                  builder: (context, constraints) {
+                    final controls = _buildCollectionControls(
+                      context: context,
+                      theme: theme,
+                      searchState: searchState,
+                      bookCount: books.length,
+                    );
+
+                    if (constraints.maxWidth < 460) {
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Browse Collection',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.headlineMedium,
+                          ),
+                          AppSpacing.gapSm,
+                          controls,
+                        ],
+                      );
+                    }
+
+                    return Row(
                       children: [
-                        PopupMenuButton<BookSortOption>(
-                          tooltip: 'Sort books',
-                          onSelected: (sortOption) {
-                            ref
-                                .read(bookSearchProvider.notifier)
-                                .updateSortOption(sortOption);
-                          },
-                          itemBuilder: (context) => const [
-                            PopupMenuItem(
-                              value: BookSortOption.relevance,
-                              child: Text('Relevance'),
-                            ),
-                            PopupMenuItem(
-                              value: BookSortOption.popularity,
-                              child: Text('Popularity'),
-                            ),
-                            PopupMenuItem(
-                              value: BookSortOption.newest,
-                              child: Text('Newest'),
-                            ),
-                            PopupMenuItem(
-                              value: BookSortOption.rating,
-                              child: Text('Rating'),
-                            ),
-                            PopupMenuItem(
-                              value: BookSortOption.priceLowToHigh,
-                              child: Text('Price'),
-                            ),
-                          ],
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.sm,
-                              vertical: AppSpacing.xs,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(
-                                AppSpacing.radiusXl,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.swap_vert_rounded,
-                                  size: 16,
-                                  color: AppColors.primaryDark,
-                                ),
-                                AppSpacing.gapWxs,
-                                Text(
-                                  _sortLabel(searchState.sortOption),
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        Expanded(
+                          child: Text(
+                            'Browse Collection',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.headlineMedium,
                           ),
                         ),
-                        AppSpacing.gapWsm,
-                        PopupMenuButton<double>(
-                          tooltip: 'Minimum rating',
-                          onSelected: (rating) {
-                            ref
-                                .read(bookSearchProvider.notifier)
-                                .updateMinimumRating(rating);
-                          },
-                          itemBuilder: (context) => const [
-                            PopupMenuItem(value: 0, child: Text('All ratings')),
-                            PopupMenuItem(value: 4, child: Text('4.0+')),
-                            PopupMenuItem(value: 4.5, child: Text('4.5+')),
-                            PopupMenuItem(value: 4.8, child: Text('4.8+')),
-                          ],
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.sm,
-                              vertical: AppSpacing.xs,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.surface,
-                              borderRadius: BorderRadius.circular(
-                                AppSpacing.radiusXl,
-                              ),
-                            ),
-                            child: Row(
-                              children: [
-                                const AppIcon(
-                                  HugeIcons.strokeRoundedStarHalf,
-                                  size: 16,
-                                  color: AppColors.warning,
-                                ),
-                                AppSpacing.gapWxs,
-                                Text(
-                                  searchState.minimumRating == 0
-                                      ? 'All ratings'
-                                      : '${searchState.minimumRating.toStringAsFixed(1)}+',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    color: AppColors.textPrimary,
-                                  ),
-                                ),
-                              ],
-                            ),
+                        AppSpacing.gapWmd,
+                        Flexible(
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: controls,
                           ),
-                        ),
-                        AppSpacing.gapWsm,
-                        Text(
-                          '${books.length} books',
-                          style: theme.textTheme.bodyMedium,
                         ),
                       ],
-                    ),
-                  ],
+                    );
+                  },
                 ),
                 AppSpacing.gapMd,
                 if (searchState.isSearching)

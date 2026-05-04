@@ -118,49 +118,6 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 52,
-                              height: 52,
-                              decoration: BoxDecoration(
-                                color: AppColors.primaryDark,
-                                borderRadius: BorderRadius.circular(
-                                  AppSpacing.radiusMd,
-                                ),
-                              ),
-                              alignment: Alignment.center,
-                              child: const AppIcon(
-                                HugeIcons.strokeRoundedBookOpen01,
-                                color: Colors.white,
-                                size: 24,
-                              ),
-                            ),
-                            AppSpacing.gapWsm,
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Book Shop',
-                                    style: theme.textTheme.titleLarge?.copyWith(
-                                      color: AppColors.primaryDark,
-                                    ),
-                                  ),
-                                  Text(
-                                    'Curated reads, cozy corners, and smart discovery',
-                                    maxLines: 2,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.textTheme.bodyMedium?.copyWith(
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        AppSpacing.gapXl,
                         Text(
                           _mode == AuthMode.signIn
                               ? 'Welcome back to your reading ritual.'
